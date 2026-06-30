@@ -1,0 +1,80 @@
+# KidQuest — Cursor Rules
+
+## Project Identity
+- **Name:** KidQuest
+- **Description:** Gezinstaak app voor kinderen (NL), met puntensysteem, beloningen en straffen
+- **Stack:** Next.js 14 (App Router) + Tailwind CSS + SQLite via Prisma + Framer Motion
+- **Language:** TypeScript
+- **Deploy:** Docker multi-arch (amd64 + arm64) → GHCR → VPS (GitHub Actions CI/CD)
+- **Repo:** pvanpuyenbroeck/kidquest
+
+## Always Keep CONTEXT.md Up To Date
+Na elke significante wijziging aan de codebase, features, architectuur of configuratie:
+1. Lees eerst `CONTEXT.md` om de huidige staat te begrijpen
+2. Update relevante secties met de wijzigingen
+3. Houd de structuur van CONTEXT.md intact (zelfde headings, same opbouw)
+4. Markeer fasen als ✅ completed wanneer ze klaar zijn
+5. Voeg nieuwe modules/componenten toe onder de juiste sectie
+
+## Design System
+- **Fonts:** Nunito (body) + Baloo 2 (headings/display)
+- **Colors:**
+  - Achtergrond: cream-100 `#FAF7F0`
+  - Dino (Emma, 8j): dino-300 `#7BAE7F` (salie groen)
+  - Unicorn (Lotte, 5j): unicorn-300 `#C9B8E8` (lavendel), unicorn-pink-300 `#F4A7B9` (roze)
+  - Accent orange: `#E8924A`
+  - Text: dark `#2D3A2E`
+- **Components:** Card-based UI, grote ronde hoeken (rounded-3xl/4xl), zachte schaduwen
+- **Animations:** Framer Motion — bounce-in, float, star-pop, slide-up
+- **Icons:** lucide-react
+
+## Code Conventions
+- **Taal:** Nederlands voor UI tekst, Engels voor code/commits
+- **Components:** Functionele React + TypeScript
+- **State management:** zustand voor global state
+- **Styling:** Tailwind utility classes, custom CSS in globals.css voor component-classes (.card, .btn, .btn-primary, etc.)
+- **Database:** Prisma client, SQLite. Modelnamen PascalCase, veldnamen camelCase
+- **API routes:** Next.js Route Handlers in src/app/api/
+- **Auth:** Simpele pin-code authenticatie (geen next-auth voor deze app)
+
+## Architecture
+```
+src/
+├── app/
+│   ├── api/           # Route handlers
+│   ├── dashboard/     # Ouder dashboard (achter pincode)
+│   ├── family/        # Gezinsscherm (voorkant)
+│   └── globals.css    # Tailwind + component classes
+├── components/
+│   ├── ui/            # Algemene UI componenten
+│   ├── tasks/         # Taak-gerelateerde componenten
+│   ├── rewards/       # Beloningen
+│   ├── children/      # Kind-profielen
+│   └── shared/        # Layout, nav, etc
+├── lib/
+│   ├── prisma.ts      # Prisma client singleton
+│   ├── db.ts          # Database helpers
+│   └── utils.ts       # Algemene utilities
+└── stores/            # zustand stores
+```
+
+## Germanium Patterns
+- Gebruik `clsx` + `tailwind-merge` voor conditionele classes
+- Date formattering met date-fns
+- Notificaties/Toasts via sonner
+- Prisma client als singleton in `src/lib/prisma.ts`
+
+## Pitfalls
+- Poort 3000 is BEZET op VPS door vroom_api → gebruik 3001
+- VPS is ARM64 → altijd multi-arch build (linux/amd64, linux/arm64)
+- Oudere Node.js versies in GitHub Actions → gebruik @v6 voor docker/build-push-action
+- `package-lock.json` is verplicht voor Docker build met `npm ci`
+- `autoprefixer` is verplicht als devDependency voor Tailwind
+- `output: 'standalone'` in next.config.js voor Docker
+- `public/` directory mag niet leeg zijn (Docker COPY faalt anders)
+
+## Communication
+- Gebruiker spreekt Nederlands
+- Code comments mogen Engels
+- Commit berichten in het Engels
+- Documentatie in het Nederlands of Engels — consistent per bestand
