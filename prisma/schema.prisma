@@ -1,0 +1,165 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// Gezinsinstelling
+// ─────────────────────────────────────────────
+model Settings {
+  id            Int    @id @default(1)
+  familyName    String @default("Onze Familie")
+  parentPin     String @default("1234")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────
+// Kinderen
+// ─────────────────────────────────────────────
+model Child {
+  id          String   @id @default(cuid())
+  name        String
+  birthDate   DateTime?
+  theme       String   @default("dino")   // "dino" | "unicorn"
+  avatarEmoji String   @default("🦕")
+  points      Int      @default(0)
+  totalEarned Int      @default(0)        // ooit verdiende punten (voor stats)
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  assignments     TaskAssignment[]
+  rewardClaims    RewardClaim[]
+  punishments     ChildPunishment[]
+  pointHistory    PointHistory[]
+}
+
+// ─────────────────────────────────────────────
+// Taken
+// ─────────────────────────────────────────────
+model Task {
+  id          String   @id @default(cuid())
+  name        String
+  emoji       String   @default("✅")
+  description String?
+  type        String   @default("daily")  // "daily" | "weekly" | "bonus"
+  recurrence  String?                     // "daily" | "weekly" | null (bonus = eenmalig)
+  pointsReward Int     @default(0)        // punten verdienen (bonus taken)
+  pointsLoss  Int      @default(0)        // punten verliezen als niet gedaan (standaard taken)
+  isActive    Boolean  @default(true)
+  mediaUrl    String?                     // Bunny.net URL voor unlock beloning
+  mediaType   String?                     // "image" | "video"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  assignments TaskAssignment[]
+  childTasks  ChildTask[]
+}
+
+// Koppeling welke taken aan welk kind zijn toegewezen
+model ChildTask {
+  id        String   @id @default(cuid())
+  childId   String
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([childId, taskId])
+}
+
+// Dagelijkse/wekelijkse instanties van taken
+model TaskAssignment {
+  id          String    @id @default(cuid())
+  childId     String
+  taskId      String
+  child       Child     @relation(fields: [childId], references: [id], onDelete: Cascade)
+  task        Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  date        DateTime  // Voor welke dag/week is dit
+  status      String    @default("pending")   // "pending" | "unlocked" | "completed" | "missed"
+  unlockedAt  DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([childId, date])
+  @@index([date])
+}
+
+// ─────────────────────────────────────────────
+// Beloningen
+// ─────────────────────────────────────────────
+model Reward {
+  id           String   @id @default(cuid())
+  name         String
+  emoji        String   @default("🎁")
+  description  String?
+  pointsCost   Int      @default(10)
+  mediaUrl     String?  // Bunny.net URL
+  mediaType    String?  // "image" | "video"
+  isActive     Boolean  @default(true)
+  availableTo  String   @default("all")  // "all" | kind-id
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  claims       RewardClaim[]
+}
+
+model RewardClaim {
+  id        String   @id @default(cuid())
+  childId   String
+  rewardId  String
+  child     Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+  reward    Reward   @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+  claimedAt DateTime @default(now())
+}
+
+// ─────────────────────────────────────────────
+// Straffen
+// ─────────────────────────────────────────────
+model Punishment {
+  id          String   @id @default(cuid())
+  name        String
+  emoji       String   @default("⚠️")
+  description String?
+  pointsLoss  Int      @default(10)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  childPunishments ChildPunishment[]
+}
+
+model ChildPunishment {
+  id           String     @id @default(cuid())
+  childId      String
+  punishmentId String
+  child        Child      @relation(fields: [childId], references: [id], onDelete: Cascade)
+  punishment   Punishment @relation(fields: [punishmentId], references: [id], onDelete: Cascade)
+  reason       String?
+  givenAt      DateTime   @default(now())
+}
+
+// ─────────────────────────────────────────────
+// Puntengeschiedenis
+// ─────────────────────────────────────────────
+model PointHistory {
+  id        String   @id @default(cuid())
+  childId   String
+  child     Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+  delta     Int                          // positief = verdienen, negatief = verlies
+  reason    String                       // beschrijving
+  sourceType String                      // "task_complete" | "task_missed" | "bonus" | "reward_claim" | "punishment" | "manual"
+  sourceId  String?                      // id van de bron (taak, beloning, straf)
+  createdAt DateTime @default(now())
+
+  @@index([childId, createdAt])
+}
