@@ -66,6 +66,9 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
+            echo "🔐 Inloggen op GHCR..."
+            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u pvanpuyenbroeck --password-stdin
+
             echo "📦 Nieuw image ophalen..."
             docker pull ghcr.io/${{ github.repository }}:latest
 
