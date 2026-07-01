@@ -6,6 +6,18 @@ export const metadata: Metadata = {
   title: 'KidQuest 🦕🦄',
   description: 'Gezinstaak app voor avontuurlijke kinderen',
   manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/icons/icon-32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: [{ url: '/icons/icon-180.png', sizes: '180x180', type: 'image/png' }],
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'KidQuest',
+  },
 }
 
 export const viewport: Viewport = {

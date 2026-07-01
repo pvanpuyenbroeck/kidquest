@@ -151,6 +151,14 @@ Een visueel, leuk systeem om taken van kinderen (2 dochters: Aline, 8j en Lea, 5
 | Media    | Bunny.net CDN (extern beheerd)                      |
 | Deploy   | Docker multi-stage build → GHCR                     |
 
+### App icons & PWA
+
+- **Bron-icoon:** `public/icon.svg` — quest-ster op crème achtergrond, gradient ring (dino-groen → oranje → unicorn-lavendel), sparkle-accenten
+- **Next.js (file-based):** `src/app/favicon.ico`, `src/app/icon.png` (192px), `src/app/apple-icon.png` (180px)
+- **PWA / manifest:** `public/manifest.json` — SVG + PNG 192/512 in `public/icons/`
+- **Metadata:** `src/app/layout.tsx` — `manifest`, `icons`, `appleWebApp`, `themeColor: #FAF7F0`
+- **Regenereren:** `node scripts/generate-icons.mjs` (lokaal: `npm install --no-save sharp`)
+
 
 ---
 
