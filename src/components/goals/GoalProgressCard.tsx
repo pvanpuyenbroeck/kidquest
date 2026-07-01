@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { getChildTheme } from '@/lib/child-themes'
 import type { ChildTheme, FamilyGoal } from '@/lib/db'
 import { GoalContributeModal } from '@/components/goals/GoalContributeModal'
+import { GoalContributionBreakdown } from '@/components/goals/GoalContributionBreakdown'
 
 interface GoalProgressCardProps {
   goal: FamilyGoal
@@ -57,14 +58,22 @@ export function GoalProgressCard({
               </p>
             </div>
 
-            <div className="h-2.5 bg-cream-200 rounded-full overflow-hidden">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${goal.progressPercent}%` }}
-                transition={{ duration: 0.8, ease: 'easeOut' }}
-                className="h-full bg-accent-orange rounded-full"
+            {goal.contributions.length > 0 ? (
+              <GoalContributionBreakdown
+                contributions={goal.contributions}
+                progressPercent={goal.progressPercent}
+                compact={compact}
               />
-            </div>
+            ) : (
+              <div className="h-2.5 bg-cream-200 rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${goal.progressPercent}%` }}
+                  transition={{ duration: 0.8, ease: 'easeOut' }}
+                  className="h-full bg-accent-orange rounded-full"
+                />
+              </div>
+            )}
 
             <button
               type="button"

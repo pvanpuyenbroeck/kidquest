@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import type { DashboardGoal } from '@/lib/goals'
 import { GoalForm, goalToFormData, type GoalFormData } from '@/components/dashboard/GoalForm'
+import { GoalContributionBreakdown } from '@/components/goals/GoalContributionBreakdown'
 
 interface ChildOption {
   id: string
@@ -165,14 +166,25 @@ export function GoalsManager() {
                 </div>
               </div>
 
-              <div className="h-3 bg-cream-200 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-accent-orange rounded-full transition-all"
-                  style={{
-                    width: `${Math.min(100, Math.round((goal.currentPoints / goal.targetPoints) * 100))}%`,
-                  }}
+              {goal.contributions.length > 0 ? (
+                <GoalContributionBreakdown
+                  contributions={goal.contributions}
+                  progressPercent={Math.min(
+                    100,
+                    Math.round((goal.currentPoints / goal.targetPoints) * 100)
+                  )}
+                  animate={false}
                 />
-              </div>
+              ) : (
+                <div className="h-3 bg-cream-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-accent-orange rounded-full transition-all"
+                    style={{
+                      width: `${Math.min(100, Math.round((goal.currentPoints / goal.targetPoints) * 100))}%`,
+                    }}
+                  />
+                </div>
+              )}
 
               <div className="flex flex-wrap gap-2">
                 <button

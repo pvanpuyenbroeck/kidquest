@@ -73,9 +73,19 @@ jobs:
             echo "📦 Nieuw image ophalen..."
             docker pull ghcr.io/${{ github.repository }}:latest
 
+            echo "📄 docker-compose.yml bijwerken..."
+            mkdir -p /opt/kidquest
+            curl -fsSL "https://raw.githubusercontent.com/${{ github.repository }}/main/docker-compose.yml" \
+              -o /opt/kidquest/docker-compose.yml
+
+            if [ ! -f /opt/kidquest/.env ]; then
+              echo "❌ /opt/kidquest/.env ontbreekt — maak dit bestand eerst aan op de VPS."
+              exit 1
+            fi
+
             echo "🔄 Container herstarten..."
             cd /opt/kidquest
-            docker compose down
+            docker compose pull
             docker compose up -d
 
             echo "🧹 Oude images opruimen..."

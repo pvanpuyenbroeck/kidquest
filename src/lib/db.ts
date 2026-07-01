@@ -1,6 +1,7 @@
 import { format, startOfDay, startOfWeek } from 'date-fns'
 import { nl } from 'date-fns/locale'
 import { resolveChildTheme, type ChildTheme } from './child-themes'
+import { getContributionsByGoalIds, type GoalChildContribution } from './goal-contributions'
 import { processMissedAssignments } from './day-close'
 import { processDailyPointsReset } from './day-start'
 import { prisma } from './prisma'
@@ -79,6 +80,7 @@ export interface FamilyGoal {
   availableTo: string
   isCompleted: boolean
   progressPercent: number
+  contributions: GoalChildContribution[]
 }
 
 export interface FamilyScreenData {
@@ -310,6 +312,8 @@ export async function getFamilyScreenData(): Promise<FamilyScreenData> {
     }),
   ])
 
+  const contributionsByGoal = await getContributionsByGoalIds(goals.map((g) => g.id))
+
   const mapGoal = (g: (typeof goals)[0]): FamilyGoal => ({
     id: g.id,
     name: g.name,
@@ -320,6 +324,7 @@ export async function getFamilyScreenData(): Promise<FamilyScreenData> {
     availableTo: g.availableTo,
     isCompleted: g.isCompleted,
     progressPercent: Math.min(100, Math.round((g.currentPoints / g.targetPoints) * 100)),
+    contributions: contributionsByGoal.get(g.id) ?? [],
   })
 
   const sharedGoals: FamilyGoal[] = goals

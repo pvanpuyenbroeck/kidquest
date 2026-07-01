@@ -130,7 +130,7 @@ Een visueel, leuk systeem om taken van kinderen (2 dochters: Aline, 8j en Lea, 5
 - 📋 **Taken** — dagelijkse/wekelijkse/bonustaken beheren, toewijzen, unlocken
 - ⭐ **Punten** — handmatig toekennen/aftrekken + geschiedenis per kind
 - 🎁 **Beloningen** — aanmaken, puntendrempel instellen, Bunny.net URL koppelen
-- 🎯 **Spaardoelen** — groot doel (bv. uitstap), kinderen storten punten naartoe
+- 🎯 **Spaardoelen** — groot doel (bv. uitstap), kinderen storten punten naartoe; visuele bijdrage per kind (gestapelde balk + legenda)
 - ⚠️ **Straffen** — straf-voorinstellingen + geven, automatische dag-afhandeling
 - 👧 **Kinderen** — profielen aanmaken/bewerken, thema (dino/unicorn) + avatar-emoji
 - ⚙️ **Instellingen** — gezinsnaam, pincode wijzigen, uur van dag-afsluiting, startpunten per dag
@@ -163,11 +163,67 @@ Een visueel, leuk systeem om taken van kinderen (2 dochters: Aline, 8j en Lea, 5
 ### CI/CD Flow
 
 ```
-Lokaal: git push → GitHub
+Lokaal: git push → GitHub (main)
 → GitHub Actions: build Docker image (amd64 + arm64)
-→ push naar ghcr.io/pvanpuyenbroeck/kidquest
-→ SSH naar VPS: docker pull + docker compose up -d
+→ push naar ghcr.io/pvanpuyenbroeck/kidquest:latest
+→ SSH naar VPS: pull image + update docker-compose.yml + docker compose up -d
 ```
+
+**Workflow:** `.github/workflows/deploy.yml` (triggert op push naar `main` of handmatig via `workflow_dispatch`)
+
+### Eerste keer op VPS (eenmalig)
+
+1. **GitHub Secrets** instellen in repo → Settings → Secrets → Actions:
+   - `VPS_HOST` = `91.99.105.174`
+   - `VPS_USER` = `pieter`
+   - `VPS_SSH_KEY` = private SSH key (volledige inhoud)
+   - `GHCR_TOKEN` = GitHub PAT met `read:packages` (voor `docker pull` op VPS)
+
+2. **VPS bootstrap** (SSH als `pieter`):
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/pvanpuyenbroeck/kidquest/main/scripts/vps-setup.sh | bash
+   nano /opt/kidquest/.env   # PARENT_PIN + NEXTAUTH_URL aanpassen
+   echo "<GHCR_TOKEN>" | docker login ghcr.io -u pvanpuyenbroeck --password-stdin
+   cd /opt/kidquest && docker compose pull && docker compose up -d
+   ```
+
+3. **Verifiëren:**
+   ```bash
+   curl -s http://localhost:3001/api/health
+   docker logs kidquest --tail 50
+   ```
+
+4. **Optioneel — Caddy reverse proxy** (als je een domein wilt):
+   ```
+   kidquest.jouwdomein.be {
+     reverse_proxy localhost:3001
+   }
+   ```
+   Zet dan `NEXTAUTH_URL` in `/opt/kidquest/.env` op `https://kidquest.jouwdomein.be`
+
+### Deploy na wijzigingen
+
+1. Commit + push naar `main` (of handmatig: Actions → "Build & Deploy KidQuest" → Run workflow)
+2. GitHub Actions bouwt multi-arch image en deployt automatisch
+3. Op VPS: container draait op poort **3001** → `http://91.99.105.174:3001`
+
+**Let op:** uncommitted lokale wijzigingen worden niet gedeployed — eerst committen en pushen.
+
+### VPS `.env` (productie)
+
+| Variabele | Verplicht | Beschrijving |
+|-----------|-----------|--------------|
+| `PARENT_PIN` | Ja | Ouder-pincode (fallback; DB-instelling is leidend) |
+| `NEXTAUTH_SECRET` | Ja | Willekeurige string voor sessie-HMAC (min. 32 tekens) |
+| `NEXTAUTH_URL` | Ja | Publieke URL van de app (bijv. `http://91.99.105.174:3001`) |
+| `DATABASE_URL` | Nee | Staat al in docker-compose: `file:/data/kidquest.db` |
+
+### Docker details
+
+- **Image:** `ghcr.io/pvanpuyenbroeck/kidquest:latest`
+- **Poort mapping:** `3001:3000` (container luistert intern op 3000)
+- **Volume:** `kidquest_data` → `/data` (SQLite persistent)
+- **Startup:** `docker-entrypoint.sh` → `prisma migrate deploy` → seed bij eerste opstart → `node server.js`
 
 
 
@@ -269,6 +325,7 @@ src/
 ├── components/
 │   ├── dashboard/                  # DashboardGate, TasksManager, PointsManager, RewardsManager, GoalsManager, PunishmentsManager, ChildrenManager, SettingsManager
 │   ├── goals/GoalProgressCard.tsx  # spaardoel voortgang + storten
+│   ├── goals/GoalContributionBreakdown.tsx  # gestapelde balk + legenda per kind
 │   ├── punishments/PunishmentCard.tsx  # alleen-lezen op gezinsscherm
 │   ├── rewards/RewardCard.tsx      # klikbaar op gezinsscherm
 │   ├── children/ChildColumn.tsx
@@ -280,6 +337,7 @@ src/
 │   ├── dashboard.ts                # taken CRUD, unlock, punten aanpassen
 │   ├── rewards.ts                  # beloningen CRUD
 │   ├── goals.ts                    # spaardoelen CRUD
+│   ├── goal-contributions.ts       # aggregatie GoalContribution per kind/doel
 │   ├── punishments.ts              # straffen CRUD + geven
 │   ├── day-close.ts                # gemiste taken + puntenaftrek
 │   ├── day-start.ts                # dagstart: punten resetten naar dailyStartPoints
@@ -301,7 +359,7 @@ src/
 
 **Bonustaken:** Ouder geeft bonustaak via dashboard → kind ziet onder "Extra bonustaken" → voltooien levert punten + media unlock. Ontgrendelde media in "Mijn verrassingen".
 
-**Spaardoelen:** Ouder maakt groot doel aan (bv. uitstap, 200 punten). Kinderen storten punten van bonustaken via "Punten storten" (ouder bevestigt). Gezinsdoelen tonen voortgang bovenaan; per kind eigen stort-knop in hun kolom.
+**Spaardoelen:** Ouder maakt groot doel aan (bv. uitstap, 200 punten). Kinderen storten punten van bonustaken via "Punten storten" (ouder bevestigt). Gezinsdoelen tonen voortgang bovenaan; per kind eigen stort-knop in hun kolom. Bijdragen per kind zichtbaar als gestapelde voortgangsbalk (kind-themakleur) met legenda bv. "Emma: 15 ⭐ (60%)" — op gezinsscherm én ouder-dashboard.
 
 **Straffen & dag-afhandeling:** Straf-voorinstellingen beheren in dashboard. Snel straf geven per kind. Niet-afgevinkte taken worden automatisch bestraft na 20:00 (of bij volgende app-load). Handmatig "Dag afsluiten" in Straffen-tab.
 

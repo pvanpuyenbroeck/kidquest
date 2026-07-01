@@ -5,7 +5,7 @@ echo "🦕 KidQuest opstarten..."
 
 # Migreer database (maak tabellen aan als ze nog niet bestaan)
 echo "📦 Database migreren..."
-npx prisma migrate deploy
+./node_modules/.bin/prisma migrate deploy
 
 # Seed database als die leeg is (eerste keer)
 echo "🌱 Database controleren..."
@@ -24,7 +24,7 @@ prisma.settings.count()
   .catch(() => process.exit(2));
 " || {
   if [ $? -eq 2 ]; then
-    npx prisma db seed
+    ./node_modules/.bin/prisma db seed
   fi
 }
 

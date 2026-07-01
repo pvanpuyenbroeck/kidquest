@@ -1,4 +1,7 @@
+import { getContributionsByGoalIds, type GoalChildContribution } from './goal-contributions'
 import { prisma } from './prisma'
+
+export type { GoalChildContribution }
 
 export interface DashboardGoal {
   id: string
@@ -11,6 +14,7 @@ export interface DashboardGoal {
   isActive: boolean
   isCompleted: boolean
   completedAt: string | null
+  contributions: GoalChildContribution[]
 }
 
 export interface CreateGoalInput {
@@ -29,18 +33,21 @@ export interface UpdateGoalInput {
   availableTo?: string
 }
 
-function mapGoal(goal: {
-  id: string
-  name: string
-  emoji: string
-  description: string | null
-  targetPoints: number
-  currentPoints: number
-  availableTo: string
-  isActive: boolean
-  isCompleted: boolean
-  completedAt: Date | null
-}): DashboardGoal {
+function mapGoal(
+  goal: {
+    id: string
+    name: string
+    emoji: string
+    description: string | null
+    targetPoints: number
+    currentPoints: number
+    availableTo: string
+    isActive: boolean
+    isCompleted: boolean
+    completedAt: Date | null
+  },
+  contributions: GoalChildContribution[] = []
+): DashboardGoal {
   return {
     id: goal.id,
     name: goal.name,
@@ -52,6 +59,7 @@ function mapGoal(goal: {
     isActive: goal.isActive,
     isCompleted: goal.isCompleted,
     completedAt: goal.completedAt?.toISOString() ?? null,
+    contributions,
   }
 }
 
@@ -60,7 +68,8 @@ export async function getDashboardGoals(): Promise<DashboardGoal[]> {
     where: { isActive: true },
     orderBy: [{ isCompleted: 'asc' }, { createdAt: 'desc' }],
   })
-  return goals.map(mapGoal)
+  const contributionsByGoal = await getContributionsByGoalIds(goals.map((g) => g.id))
+  return goals.map((goal) => mapGoal(goal, contributionsByGoal.get(goal.id) ?? []))
 }
 
 export async function createGoal(input: CreateGoalInput): Promise<DashboardGoal> {
@@ -114,13 +123,16 @@ export async function resetGoal(id: string): Promise<DashboardGoal> {
   const existing = await prisma.savingsGoal.findUnique({ where: { id } })
   if (!existing) throw new GoalError('NOT_FOUND', 'Doel niet gevonden')
 
-  const goal = await prisma.savingsGoal.update({
-    where: { id },
-    data: {
-      currentPoints: 0,
-      isCompleted: false,
-      completedAt: null,
-    },
+  const goal = await prisma.$transaction(async (tx) => {
+    await tx.goalContribution.deleteMany({ where: { goalId: id } })
+    return tx.savingsGoal.update({
+      where: { id },
+      data: {
+        currentPoints: 0,
+        isCompleted: false,
+        completedAt: null,
+      },
+    })
   })
   return mapGoal(goal)
 }
