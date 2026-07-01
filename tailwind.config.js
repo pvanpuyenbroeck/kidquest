@@ -1,10 +1,47 @@
 /** @type {import('tailwindcss').Config} */
+
+const childThemeNames = ['dino', 'unicorn', 'ocean', 'sunset', 'berry', 'sunshine']
+const childThemeShades = ['50', '100', '200', '300', '400']
+
+function buildChildThemeSafelist() {
+  const classes = new Set([
+    'btn-dino',
+    'btn-unicorn',
+    'btn-ocean',
+    'btn-sunset',
+    'btn-berry',
+    'btn-sunshine',
+    'from-unicorn-50',
+    'to-unicorn-pink-100',
+    'border-unicorn-200',
+    'bg-unicorn-pink-100',
+    'ring-unicorn-pink-100',
+    'hover:ring-unicorn-pink-200',
+  ])
+
+  for (const theme of childThemeNames) {
+    for (const shade of childThemeShades) {
+      classes.add(`bg-${theme}-${shade}`)
+      classes.add(`from-${theme}-${shade}`)
+      classes.add(`to-${theme}-${shade}`)
+      classes.add(`border-${theme}-${shade}`)
+      classes.add(`ring-${theme}-${shade}`)
+      classes.add(`hover:ring-${theme}-${shade}`)
+      classes.add(`hover:bg-${theme}-${shade}`)
+    }
+  }
+
+  return [...classes]
+}
+
 module.exports = {
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/lib/**/*.{js,ts,jsx,tsx}',
   ],
+  safelist: buildChildThemeSafelist(),
   theme: {
     extend: {
       colors: {
@@ -14,7 +51,7 @@ module.exports = {
           100: '#FAF7F0',
           200: '#F5EFE0',
         },
-        // Dino thema (Emma)
+        // Dino thema (Lea)
         dino: {
           50:  '#F0F7F1',
           100: '#D4EDDA',
@@ -24,7 +61,7 @@ module.exports = {
           500: '#3D6B42',
           600: '#2D5031',
         },
-        // Unicorn thema (Lotte)
+        // Unicorn thema (Aline)
         unicorn: {
           50:  '#F9F5FF',
           100: '#EDE0FF',
@@ -39,6 +76,35 @@ module.exports = {
             300: '#F4A7B9',  // accent
             400: '#E87898',
           }
+        },
+        // Extra kind-thema's
+        ocean: {
+          50:  '#F0F7FB',
+          100: '#D4EAF5',
+          200: '#A8D5EB',
+          300: '#7BAFD4',
+          400: '#5A94BE',
+        },
+        sunset: {
+          50:  '#FFF5EE',
+          100: '#FFE4D4',
+          200: '#FFC9A8',
+          300: '#F4A574',
+          400: '#E8924A',
+        },
+        berry: {
+          50:  '#FFF0F5',
+          100: '#FFD4E4',
+          200: '#F4A7C4',
+          300: '#E88BA5',
+          400: '#D46A8A',
+        },
+        sunshine: {
+          50:  '#FFFBF0',
+          100: '#FFF3D4',
+          200: '#FFE8A8',
+          300: '#F5C842',
+          400: '#E8B020',
         },
         // Gedeeld
         earth: {
@@ -86,6 +152,11 @@ module.exports = {
         'slide-up': {
           '0%': { transform: 'translateY(20px)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        'shake': {
+          '0%, 100%': { transform: 'translateX(0)' },
+          '20%, 60%': { transform: 'translateX(-8px)' },
+          '40%, 80%': { transform: 'translateX(8px)' },
         }
       },
       animation: {
@@ -93,6 +164,7 @@ module.exports = {
         'float': 'float 3s ease-in-out infinite',
         'star-pop': 'star-pop 0.5s ease-out',
         'slide-up': 'slide-up 0.3s ease-out',
+        'shake': 'shake 0.4s ease-in-out',
       }
     },
   },

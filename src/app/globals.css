@@ -35,6 +35,22 @@
     @apply btn bg-unicorn-300 text-white hover:bg-unicorn-400 shadow-md;
   }
 
+  .btn-ocean {
+    @apply btn bg-ocean-300 text-white hover:bg-ocean-400 shadow-md;
+  }
+
+  .btn-sunset {
+    @apply btn bg-sunset-300 text-white hover:bg-sunset-400 shadow-md;
+  }
+
+  .btn-berry {
+    @apply btn bg-berry-300 text-white hover:bg-berry-400 shadow-md;
+  }
+
+  .btn-sunshine {
+    @apply btn bg-sunshine-300 text-dark hover:bg-sunshine-400 shadow-md;
+  }
+
   .btn-ghost {
     @apply btn bg-cream-200 text-dark hover:bg-cream-200/80;
   }
@@ -53,5 +69,22 @@
 
   .section-title {
     @apply font-display text-2xl font-bold text-dark;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Grotere touch-targets op tablet/touch-schermen */
+  @media (pointer: coarse) {
+    .touch-target {
+      min-height: 3rem;
+    }
   }
 }

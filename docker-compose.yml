@@ -4,12 +4,12 @@ services:
     container_name: kidquest
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
       - NODE_ENV=production
       - DATABASE_URL=file:/data/kidquest.db
       - PARENT_PIN=${PARENT_PIN:-1234}
-      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-changeme-in-production}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
     volumes:
       - kidquest_data:/data

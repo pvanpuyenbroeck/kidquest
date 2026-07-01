@@ -1,0 +1,18 @@
+{
+  "name": "KidQuest",
+  "short_name": "KidQuest",
+  "description": "Gezinstaak app voor avontuurlijke kinderen",
+  "start_url": "/family",
+  "display": "standalone",
+  "background_color": "#FAF7F0",
+  "theme_color": "#FAF7F0",
+  "lang": "nl",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

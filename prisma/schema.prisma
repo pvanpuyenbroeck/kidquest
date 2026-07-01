@@ -14,11 +14,14 @@ datasource db {
 // Gezinsinstelling
 // ─────────────────────────────────────────────
 model Settings {
-  id            Int    @id @default(1)
-  familyName    String @default("Onze Familie")
-  parentPin     String @default("1234")
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id               Int       @id @default(1)
+  familyName       String    @default("Onze Familie")
+  parentPin        String    @default("1234")
+  dayCloseHour     Int       @default(20)   // uur waarop de dag automatisch afsluit (0-23)
+  dailyStartPoints Int       @default(10)   // punten waarmee elk kind de dag begint
+  lastDayStarted   DateTime?                // laatste kalenderdag waarop dagstart-punten zijn toegepast
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 }
 
 // ─────────────────────────────────────────────
@@ -28,7 +31,7 @@ model Child {
   id          String   @id @default(cuid())
   name        String
   birthDate   DateTime?
-  theme       String   @default("dino")   // "dino" | "unicorn"
+  theme       String   @default("dino")   // dino | unicorn | ocean | sunset | berry | sunshine
   avatarEmoji String   @default("🦕")
   points      Int      @default(0)
   totalEarned Int      @default(0)        // ooit verdiende punten (voor stats)
@@ -41,6 +44,7 @@ model Child {
   rewardClaims    RewardClaim[]
   punishments     ChildPunishment[]
   pointHistory    PointHistory[]
+  goalContributions GoalContribution[]
 }
 
 // ─────────────────────────────────────────────
@@ -157,9 +161,42 @@ model PointHistory {
   child     Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
   delta     Int                          // positief = verdienen, negatief = verlies
   reason    String                       // beschrijving
-  sourceType String                      // "task_complete" | "task_missed" | "bonus" | "reward_claim" | "punishment" | "manual"
+  sourceType String                      // "task_complete" | "task_missed" | "bonus" | "reward_claim" | "punishment" | "manual" | "day_start"
   sourceId  String?                      // id van de bron (taak, beloning, straf)
   createdAt DateTime @default(now())
 
+  @@index([childId, createdAt])
+}
+
+// ─────────────────────────────────────────────
+// Spaardoelen (grote doelen, bv. uitstap)
+// ─────────────────────────────────────────────
+model SavingsGoal {
+  id            String   @id @default(cuid())
+  name          String
+  emoji         String   @default("🎯")
+  description   String?
+  targetPoints  Int
+  currentPoints Int      @default(0)
+  availableTo   String   @default("all")  // "all" | kind-id
+  isActive      Boolean  @default(true)
+  isCompleted   Boolean  @default(false)
+  completedAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  contributions GoalContribution[]
+}
+
+model GoalContribution {
+  id        String      @id @default(cuid())
+  goalId    String
+  childId   String
+  goal      SavingsGoal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  child     Child       @relation(fields: [childId], references: [id], onDelete: Cascade)
+  amount    Int
+  createdAt DateTime    @default(now())
+
+  @@index([goalId, createdAt])
   @@index([childId, createdAt])
 }
