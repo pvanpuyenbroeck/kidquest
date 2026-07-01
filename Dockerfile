@@ -23,6 +23,14 @@ COPY . .
 # Genereer Prisma client
 RUN npx prisma generate
 
+# Bundel seed voor runtime (geen tsx/esbuild-platform binaries in productie-image)
+RUN ./node_modules/.bin/esbuild prisma/seed.ts \
+  --bundle \
+  --platform=node \
+  --packages=external \
+  --format=cjs \
+  --outfile=prisma/seed.runtime.cjs
+
 # Build Next.js
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV DATABASE_URL="file:/data/kidquest.db"
@@ -49,9 +57,7 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder /app/node_modules/tsx ./node_modules/tsx
-COPY --from=builder /app/node_modules/esbuild ./node_modules/esbuild
-# .bin/* zijn symlinks; COPY volgt ze en breekt paden (wasm niet gevonden). Entrypoint gebruikt directe paden.
+# prisma/ bevat seed.runtime.cjs (gebundeld in builder); geen tsx/esbuild in productie
 
 # Startup script
 COPY docker-entrypoint.sh ./
