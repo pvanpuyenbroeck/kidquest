@@ -359,6 +359,8 @@ src/
 
 **Ouder-pincode:** standaard `1234` (via Settings of `PARENT_PIN` env)
 
+**Sessie-cookie:** `secure` alleen bij `NEXTAUTH_URL` met `https://` — bij HTTP (VPS IP) moet `NEXTAUTH_URL` met `http://` beginnen, anders worden API-calls niet geauthenticeerd en blijft het dashboard leeg.
+
 **Dashboard:** `/dashboard` — pincode vereist. Tabs: Taken, Punten, Beloningen, Doelen, Straffen, Kinderen, Instellingen.
 
 **Kinderen & instellingen:** Kinderen-tab beheert profielen (naam, kleur/thema, avatar-emoji; verwijderen = deactiveren, punten/historiek blijven). Zes kleuren: dino groen, unicorn paars, ocean blauw, sunset oranje, berry roze, sunshine geel. Instellingen-tab regelt gezinsnaam, ouder-pincode (4 cijfers), het uur van automatische dag-afsluiting en het aantal startpunten per dag (standaard 10). De DB-pincode is leidend (env `PARENT_PIN` enkel fallback).

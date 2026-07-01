@@ -38,8 +38,18 @@ export function DashboardGate({ children }: DashboardGateProps) {
           return
         }
 
+        const sessionRes = await fetch('/api/auth/session')
+        const sessionData = await sessionRes.json()
+        if (!sessionData.authenticated) {
+          setError(true)
+          setLoading(false)
+          setResetKey((k) => k + 1)
+          return
+        }
+
         setAuthenticated(true)
         setError(false)
+        setLoading(false)
       } catch {
         setError(true)
         setLoading(false)

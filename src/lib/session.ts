@@ -4,6 +4,14 @@ import { cookies } from 'next/headers'
 export const PARENT_SESSION_COOKIE = 'kidquest_parent_session'
 const SESSION_DURATION_MS = 30 * 60 * 1000 // 30 minuten
 
+/** Secure cookies alleen bij HTTPS — HTTP (bv. VPS IP:3001) anders worden sessies niet opgeslagen. */
+export function useSecureSessionCookies(): boolean {
+  const url = process.env.NEXTAUTH_URL ?? ''
+  if (url.startsWith('https://')) return true
+  if (url.startsWith('http://')) return false
+  return false
+}
+
 function getSecret(): string {
   return process.env.NEXTAUTH_SECRET ?? process.env.PARENT_PIN ?? 'kidquest-dev-secret'
 }
@@ -49,9 +57,21 @@ export function sessionCookieOptions(token: string) {
     name: PARENT_SESSION_COOKIE,
     value: token,
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: useSecureSessionCookies(),
     sameSite: 'lax' as const,
     path: '/',
     maxAge: SESSION_DURATION_MS / 1000,
+  }
+}
+
+export function clearSessionCookieOptions() {
+  return {
+    name: PARENT_SESSION_COOKIE,
+    value: '',
+    httpOnly: true,
+    secure: useSecureSessionCookies(),
+    sameSite: 'lax' as const,
+    path: '/',
+    maxAge: 0,
   }
 }
