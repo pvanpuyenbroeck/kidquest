@@ -4,15 +4,28 @@ if (!process.env.DATABASE_URL) {
 }
 
 import { PrismaClient } from '@prisma/client'
-import { startOfDay, startOfWeek } from 'date-fns'
 
 const prisma = new PrismaClient()
+
+function startOfDay(date: Date): Date {
+  const d = new Date(date)
+  d.setHours(0, 0, 0, 0)
+  return d
+}
+
+function startOfWeekMonday(date: Date): Date {
+  const d = startOfDay(date)
+  const day = d.getDay()
+  const daysSinceMonday = day === 0 ? 6 : day - 1
+  d.setDate(d.getDate() - daysSinceMonday)
+  return d
+}
 
 async function main() {
   console.log('🌱 Database seeden...')
 
   const today = startOfDay(new Date())
-  const week = startOfWeek(new Date(), { weekStartsOn: 1 })
+  const week = startOfWeekMonday(new Date())
   const isMonday = new Date().getDay() === 1
 
   // Instellingen

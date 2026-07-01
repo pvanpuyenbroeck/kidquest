@@ -24,7 +24,7 @@ prisma.settings.count()
   .catch(() => process.exit(2));
 " || {
   if [ $? -eq 2 ]; then
-    ./node_modules/.bin/prisma db seed
+    ./node_modules/.bin/tsx prisma/seed.ts
   fi
 }
 
