@@ -231,7 +231,7 @@ Lokaal: git push → GitHub (main)
 - **Image:** `ghcr.io/pvanpuyenbroeck/kidquest:latest`
 - **Poort mapping:** `3001:3000` (container luistert intern op 3000)
 - **Volume:** `kidquest_data` → `/data` (SQLite persistent)
-- **Startup:** `docker-entrypoint.sh` → `prisma migrate deploy` → `tsx prisma/seed.ts` bij eerste opstart → `node server.js`
+- **Startup:** `docker-entrypoint.sh` → `node node_modules/prisma/build/index.js migrate deploy` → `tsx prisma/seed.ts` bij eerste opstart → `node server.js` (geen `.bin`-symlinks in image — Docker COPY breekt die)
 
 
 
