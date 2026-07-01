@@ -119,7 +119,7 @@ Een visueel, leuk systeem om taken van kinderen (2 dochters: Aline, 8j en Lea, 5
 ### 1. Gezinsscherm (tablet/TV — "voorkant")
 
 - Beide kinderen **naast elkaar** met eigen kolom
-- Per kind: takenlijst met afvink-buttons, punten-teller, beschikbare beloningen
+- Per kind: takenlijst met afvink-buttons, punten-teller, beschikbare beloningen, **straffen vandaag** (door ouder gegeven)
 - Pin-code popup voor ouderlijke bevestiging
 - Animaties bij afvinken (punten vliegen, confetti)
 
@@ -269,13 +269,14 @@ src/
 ├── components/
 │   ├── dashboard/                  # DashboardGate, TasksManager, PointsManager, RewardsManager, GoalsManager, PunishmentsManager, ChildrenManager, SettingsManager
 │   ├── goals/GoalProgressCard.tsx  # spaardoel voortgang + storten
+│   ├── punishments/PunishmentCard.tsx  # alleen-lezen op gezinsscherm
 │   ├── rewards/RewardCard.tsx      # klikbaar op gezinsscherm
 │   ├── children/ChildColumn.tsx
 │   ├── shared/                     # FamilyScreen, PinModal, RewardCelebration, ...
 │   └── tasks/TaskItem.tsx, TaskList.tsx
 ├── lib/
 │   ├── prisma.ts, auth.ts, session.ts, api-auth.ts
-│   ├── db.ts                       # gezinsscherm, taak afvinken, beloning claimen
+│   ├── db.ts                       # gezinsscherm, taak afvinken, beloning claimen, straffen vandaag
 │   ├── dashboard.ts                # taken CRUD, unlock, punten aanpassen
 │   ├── rewards.ts                  # beloningen CRUD
 │   ├── goals.ts                    # spaardoelen CRUD

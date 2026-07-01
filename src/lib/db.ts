@@ -33,6 +33,15 @@ export interface UnlockedMedia {
   unlockedAt: string
 }
 
+export interface FamilyPunishment {
+  id: string
+  name: string
+  emoji: string
+  pointsLoss: number
+  reason: string | null
+  givenAt: string
+}
+
 export interface FamilyChild {
   id: string
   name: string
@@ -44,6 +53,7 @@ export interface FamilyChild {
   unlockedMedia: UnlockedMedia[]
   personalGoals: FamilyGoal[]
   claimedRewardIdsToday: string[]
+  punishmentsToday: FamilyPunishment[]
 }
 
 export interface FamilyReward {
@@ -105,6 +115,31 @@ async function getClaimedRewardIdsToday(childId: string): Promise<string[]> {
     select: { rewardId: true },
   })
   return claims.map((c) => c.rewardId)
+}
+
+async function getPunishmentsTodayForChild(childId: string): Promise<FamilyPunishment[]> {
+  const today = todayStart()
+  const records = await prisma.childPunishment.findMany({
+    where: {
+      childId,
+      givenAt: { gte: today },
+    },
+    include: {
+      punishment: {
+        select: { name: true, emoji: true, pointsLoss: true },
+      },
+    },
+    orderBy: { givenAt: 'desc' },
+  })
+
+  return records.map((r) => ({
+    id: r.id,
+    name: r.punishment.name,
+    emoji: r.punishment.emoji,
+    pointsLoss: r.punishment.pointsLoss,
+    reason: r.reason,
+    givenAt: r.givenAt.toISOString(),
+  }))
 }
 
 function inferMediaType(url: string, mediaType?: string | null): 'image' | 'video' {
@@ -293,12 +328,13 @@ export async function getFamilyScreenData(): Promise<FamilyScreenData> {
 
   const childrenWithAssignments = await Promise.all(
     children.map(async (child) => {
-      const [assignments, bonusAssignments, unlockedMedia, claimedRewardIdsToday] =
+      const [assignments, bonusAssignments, unlockedMedia, claimedRewardIdsToday, punishmentsToday] =
         await Promise.all([
           getOrCreateTodayAssignments(child.id),
           getBonusAssignmentsForChild(child.id),
           getUnlockedMediaForChild(child.id),
           getClaimedRewardIdsToday(child.id),
+          getPunishmentsTodayForChild(child.id),
         ])
       return {
         id: child.id,
@@ -311,6 +347,7 @@ export async function getFamilyScreenData(): Promise<FamilyScreenData> {
         unlockedMedia,
         personalGoals: goals.filter((g) => g.availableTo === child.id).map(mapGoal),
         claimedRewardIdsToday,
+        punishmentsToday,
       }
     })
   )

@@ -10,6 +10,7 @@ import { TaskList } from '@/components/tasks/TaskList'
 import { RewardCard } from '@/components/rewards/RewardCard'
 import { GoalProgressCard } from '@/components/goals/GoalProgressCard'
 import { UnlockedMediaGallery } from '@/components/rewards/UnlockedMediaGallery'
+import { PunishmentCard } from '@/components/punishments/PunishmentCard'
 
 interface ChildColumnProps {
   child: FamilyChild
@@ -75,6 +76,18 @@ export function ChildColumn({ child, rewards, sharedGoals = [], index = 0 }: Chi
           childName={child.name}
           title="Extra bonustaken"
         />
+      )}
+
+      {/* Straffen vandaag */}
+      {child.punishmentsToday.length > 0 && (
+        <section>
+          <h3 className="section-title mb-3">Straffen vandaag</h3>
+          <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+            {child.punishmentsToday.map((punishment, i) => (
+              <PunishmentCard key={punishment.id} punishment={punishment} index={i} />
+            ))}
+          </div>
+        </section>
       )}
 
       {/* Ontgrendelde media */}
